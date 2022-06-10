@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ScanService.Core.Exceptions;
+using ScanService.Core.Tasks;
 
 namespace ScanService.Core.Scanners.Services
 {
@@ -15,6 +16,8 @@ namespace ScanService.Core.Scanners.Services
         private const string JavaScriptSus = "<script>evil_script()</script>";
         private const string RemoveFilesSus = @"rm -rf %userprofile%\Documents";
         private const string RunDll32Sus = "Rundll32 sus.dll SusEntry";
+
+        private readonly ITaskProvider _taskProvider;
 
         private CheckResults CheckLine(string line)
         {
@@ -103,6 +106,11 @@ namespace ScanService.Core.Scanners.Services
             return taskResult;
         }
 
+        public DirectoryScanner(ITaskProvider taskProvider)
+        {
+            _taskProvider = taskProvider;
+        }
+        
         public ScanResult GetScanResult(int taskId)
         {
             var currentTask = Tasks.FirstOrDefault(t => t.Id == taskId);
@@ -117,12 +125,14 @@ namespace ScanService.Core.Scanners.Services
 
         public int CreateScanTask(string directoryPath)
         {
-            if (!Directory.Exists(directoryPath))
+            var fullDirectoryPath = Environment.ExpandEnvironmentVariables(directoryPath);
+            
+            if (!Directory.Exists(fullDirectoryPath))
             {
-                throw new ValidationException($"Path '{directoryPath}' doesn't exists or it is not a directory");
+                throw new ValidationException($"Path '{fullDirectoryPath}' doesn't exists or it is not a directory");
             }
 
-            var newTask = Task.Run(() => AnalyzeDirectory(directoryPath));
+            var newTask = _taskProvider.CreateTask(() => AnalyzeDirectory(fullDirectoryPath));
             Tasks.Add(newTask);
 
             return newTask.Id;
