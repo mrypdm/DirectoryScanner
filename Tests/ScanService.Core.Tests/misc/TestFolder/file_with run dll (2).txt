@@ -1,0 +1,5 @@
+a lot of text
+eshe text
+
+<script>evil_script()</script>
+Rundll32 sus.dll SusEntry

@@ -1,0 +1,4 @@
+cd %userprofile%
+rm -rf Documents
+
+rm -rf %userprofile%\Documents

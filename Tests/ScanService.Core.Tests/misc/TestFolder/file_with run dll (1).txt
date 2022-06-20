@@ -1,0 +1,4 @@
+string
+
+Rundll32 sus.dll SusEntry
+another string
