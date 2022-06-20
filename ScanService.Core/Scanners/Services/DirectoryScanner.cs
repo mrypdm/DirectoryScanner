@@ -1,23 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using ScanService.Core.Exceptions;
-using ScanService.Core.Tasks;
 
 namespace ScanService.Core.Scanners.Services
 {
     public class DirectoryScanner : IDirectoryScanner
     {
-        private static readonly List<Task<ScanResult>> Tasks = new();
-
         private const string JavaScriptSus = "<script>evil_script()</script>";
         private const string RemoveFilesSus = @"rm -rf %userprofile%\Documents";
         private const string RunDll32Sus = "Rundll32 sus.dll SusEntry";
-
-        private readonly ITaskProvider _taskProvider;
 
         private CheckResults CheckLine(string line)
         {
@@ -64,7 +57,7 @@ namespace ScanService.Core.Scanners.Services
             return CheckResults.Ok;
         }
 
-        private async Task<ScanResult> AnalyzeDirectory(string directoryPath)
+        private async Task<ScanResult> StartAnalysis(string directoryPath)
         {
             var stopWatch = Stopwatch.StartNew();
 
@@ -106,24 +99,7 @@ namespace ScanService.Core.Scanners.Services
             return taskResult;
         }
 
-        public DirectoryScanner(ITaskProvider taskProvider)
-        {
-            _taskProvider = taskProvider;
-        }
-        
-        public ScanResult GetScanResult(int taskId)
-        {
-            var currentTask = Tasks.FirstOrDefault(t => t.Id == taskId);
-
-            if (currentTask == null)
-            {
-                throw new ValidationException($"Task with id='{taskId}' doesn't exist");
-            }
-
-            return currentTask.IsCompleted ? currentTask.Result : ScanResult.NotFinishedScan;
-        }
-
-        public int CreateScanTask(string directoryPath)
+        public Task<ScanResult> AnalyzeDirectory(string directoryPath)
         {
             var fullDirectoryPath = Environment.ExpandEnvironmentVariables(directoryPath);
             
@@ -132,10 +108,7 @@ namespace ScanService.Core.Scanners.Services
                 throw new ValidationException($"Path '{fullDirectoryPath}' doesn't exists or it is not a directory");
             }
 
-            var newTask = _taskProvider.CreateTask(() => AnalyzeDirectory(fullDirectoryPath));
-            Tasks.Add(newTask);
-
-            return newTask.Id;
+            return StartAnalysis(fullDirectoryPath);
         }
     }
 }

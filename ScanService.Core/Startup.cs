@@ -8,7 +8,7 @@ namespace ScanService.Core
     {
         public static IServiceCollection AddCore(this IServiceCollection services)
         {
-            services.AddScoped<ITaskProvider, TaskProvider>();
+            services.AddScoped<IScanTaskProvider, ScanTaskProvider>();
             services.AddScoped<IDirectoryScanner, DirectoryScanner>();
             
             return services;

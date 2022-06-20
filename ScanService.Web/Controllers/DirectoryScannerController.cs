@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ScanService.Core.Scanners.Services;
+using ScanService.Core.Tasks;
 using ScanService.Web.Controllers.Dto;
 using ScanService.Web.Controllers.Mappers;
 
@@ -9,9 +9,9 @@ namespace ScanService.Web.Controllers
     [Route("[controller]")]
     public class DirectoryScannerController : ControllerBase
     {
-        private readonly IDirectoryScanner _service;
+        private readonly IScanTaskProvider _service;
 
-        public DirectoryScannerController(IDirectoryScanner service)
+        public DirectoryScannerController(IScanTaskProvider service)
         {
             _service = service;
         }
@@ -20,7 +20,7 @@ namespace ScanService.Web.Controllers
         [Route("{id:int}")]
         public ScanResultDto GetTask(int id)
         {
-            var taskResult = _service.GetScanResult(id);
+            var taskResult = _service.GetScanTaskResult(id);
             return taskResult.ToDto();
         }
 
@@ -28,7 +28,7 @@ namespace ScanService.Web.Controllers
         [Route("")]
         public ScanTaskDto CreateScanTask(ScanTaskCreateDto newScanInfo)
         {
-            var taskId = _service.CreateScanTask(newScanInfo.DirectoryPath);
+            var taskId = _service.CreateScanDirectoryTask(newScanInfo.DirectoryPath);
 
             return new ScanTaskDto
             {

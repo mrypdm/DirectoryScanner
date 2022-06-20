@@ -1,35 +1,18 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using ScanService.Core.Exceptions;
-using ScanService.Core.Scanners;
 using ScanService.Core.Scanners.Services;
-using ScanService.Core.Tasks;
 using Xunit;
 
 namespace ScanService.Core.Tests
 {
-    public class TaskProviderMock : ITaskProvider
-    {
-        public Task CurrentTask;
-        
-        public Task<TResult> CreateTask<TResult>(Func<Task<TResult>> func)
-        {
-            var newTask = Task.Run(func);
-            CurrentTask = newTask;
-            return newTask;
-        }
-    }
-    
     public class DirectoryScannerTests
     {
-        private readonly TaskProviderMock _taskProviderMock;
         private readonly IDirectoryScanner _directoryScanner;
 
         public DirectoryScannerTests()
         {
-            _taskProviderMock = new TaskProviderMock();
-            _directoryScanner = new DirectoryScanner(_taskProviderMock);
+            _directoryScanner = new DirectoryScanner();
         }
         
         
@@ -46,10 +29,8 @@ namespace ScanService.Core.Tests
             int expectedRunDllCount = 3;
             
             // ACT
-
-            _directoryScanner.CreateScanTask(directoryPath);
             
-            var task = _taskProviderMock.CurrentTask as Task<ScanResult>;
+            var task = _directoryScanner.AnalyzeDirectory(directoryPath);
             var scanResult = await task;
 
             // ASSERT
@@ -70,7 +51,7 @@ namespace ScanService.Core.Tests
             
             // ACT, ASERT
 
-            Assert.Throws<ValidationException>(() => _directoryScanner.CreateScanTask(notExistingDirectoryPath));
+            Assert.ThrowsAsync<ValidationException>(() => _directoryScanner.AnalyzeDirectory(notExistingDirectoryPath));
         }
         
         [Fact]
@@ -82,7 +63,7 @@ namespace ScanService.Core.Tests
             
             // ACT, ASERT
 
-            Assert.Throws<ValidationException>(() => _directoryScanner.CreateScanTask(notDirectoryPath));
+            Assert.ThrowsAsync<ValidationException>(() => _directoryScanner.AnalyzeDirectory(notDirectoryPath));
         }
     }
 }
